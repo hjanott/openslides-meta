@@ -129,17 +129,12 @@ class HelperGetNames:
 
     @staticmethod
     @max_length
-    def get_table_name(table_name: str, migration: bool = False) -> str:
+    def get_table_name(table_name: str) -> str:
         """
         Gets the table name as old collection name with suffix '_t'.
-        If migration is True '_m'.
         Takes either collection or table name.
         """
-        if migration:
-            if table_name.endswith("_t"):
-                table_name = table_name[:-2]
-            return table_name + "_m"
-        elif not table_name.endswith("_t"):
+        if not table_name.endswith("_t"):
             return table_name + "_t"
         else:
             return table_name

@@ -21,7 +21,8 @@ fields:
     - common
     - internal
     - hidden
-    default: common
+    default: This was changed.
+    description: This was added.
     restriction_mode: A
   duration:
     type: number
