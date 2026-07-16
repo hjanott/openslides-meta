@@ -40,8 +40,8 @@ fields:
     restriction_mode: A
   published_to_meetings_in_organization_id:
     type: relation
-    to: organization/published_mediafile_ids
-    reference: organization
+    to: chaos/published_mediafile_ids
+    reference: chaos
     restriction_mode: A
   parent_id:
     type: relation
@@ -58,10 +58,10 @@ fields:
     type: generic-relation
     to:
     - meeting/mediafile_ids
-    - organization/mediafile_ids
+    - chaos/mediafile_ids
     reference:
     - meeting
-    - organization
+    - chaos
     restriction_mode: A
     required: true
     constant: true

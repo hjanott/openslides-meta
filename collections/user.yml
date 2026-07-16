@@ -206,8 +206,8 @@ fields:
         log_value_column: meeting_id
   organization_id:
     type: relation
-    reference: organization
-    to: organization/user_ids
+    reference: chaos
+    to: chaos/user_ids
     required: true
     restriction_mode: F
     constant: true

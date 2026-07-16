@@ -155,13 +155,13 @@ fields:
     type: color
   theme_for_organization_id:
     restriction_mode: A
-    to: organization/theme_id
+    to: chaos/theme_id
     type: relation
   organization_id:
     type: relation
     default: 1
     reference: organization
-    to: organization/theme_ids
+    to: chaos/theme_ids
     restriction_mode: A
     constant: true
     required: true

@@ -15,9 +15,9 @@ fields:
     required: true
     constant: true
     default: 1
-    to: organization/gender_ids
+    to: chaos/gender_ids
     restriction_mode: A
-    reference: organization
+    reference: chaos
   user_ids:
     type: relation-list
     to: user/gender_id

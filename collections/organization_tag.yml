@@ -24,9 +24,9 @@ fields:
     restriction_mode: A
   organization_id:
     type: relation
-    reference: organization
+    reference: chaos
     default: 1
-    to: organization/organization_tag_ids
+    to: chaos/organization_tag_ids
     restriction_mode: A
     constant: true
     required: true

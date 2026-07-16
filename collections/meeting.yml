@@ -27,14 +27,14 @@ fields:
     required: true
   is_active_in_organization_id:
     type: relation
-    reference: organization
-    to: organization/active_meeting_ids
+    reference: chaos
+    to: chaos/active_meeting_ids
     restriction_mode: F
     description: Backrelation and boolean flag at once
   is_archived_in_organization_id:
     type: relation
-    reference: organization
-    to: organization/archived_meeting_ids
+    reference: chaos
+    to: chaos/archived_meeting_ids
     restriction_mode: F
     description: Backrelation and boolean flag at once
   description:
@@ -80,8 +80,8 @@ fields:
   # System
   template_for_organization_id:
     type: relation
-    reference: organization
-    to: organization/template_meeting_ids
+    reference: chaos
+    to: chaos/template_meeting_ids
     restriction_mode: B
   enable_anonymous:
     type: boolean

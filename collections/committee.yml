@@ -108,8 +108,8 @@ fields:
     restriction_mode: A
   organization_id:
     type: relation
-    reference: organization
-    to: organization/committee_ids
+    reference: chaos
+    to: chaos/committee_ids
     required: true
     restriction_mode: A
     constant: true
