@@ -1,3 +1,5 @@
+unique_together:
+  - comment, closed
 fields:
   id:
     type: number
