@@ -1,5 +1,4 @@
 import logging
-import string
 from collections import defaultdict
 from collections.abc import Callable
 from pathlib import Path
@@ -17,7 +16,7 @@ from .helper_get_names import (
     InternalHelper,
     TableFieldType,
 )
-from .typing import PG_TYPES, SchemaZoneTexts, SubstDict
+from .typing import SchemaZoneTexts, SubstDict
 
 DESTINATION = (Path(__file__).parent / ".." / "sql" / "schema_relational.sql").resolve()
 
@@ -495,15 +494,6 @@ class GenerateCodeBlocks:
         text = cast(SchemaZoneTexts, defaultdict(str))
         subst, szt = Helper.get_initials(table_name, fname, type_, fdata)
         text.update(szt)
-        if isinstance((tmp := subst["type"]), string.Template):
-            if maxLength := Helper.get_varchar_max_length(fdata, type_):
-                subst["type"] = tmp.substitute(
-                    {
-                        "maxLength": maxLength,
-                        "field_name": fname,
-                        "table_name": table_name,
-                    }
-                )
         if fdata.get("constant"):
             text["create_trigger_prevent_updates_code"] = (
                 cls.get_trigger_prevent_updates(table_name, fname)
@@ -517,11 +507,6 @@ class GenerateCodeBlocks:
         text = cast(SchemaZoneTexts, defaultdict(str))
         subst, szt = Helper.get_initials(table_name, fname, type_, fdata)
         text.update(szt)
-        tmpl = PG_TYPES[type_]
-        assert isinstance(tmpl, string.Template)
-        subst["type"] = tmpl.substitute(
-            {"color_constraint": Helper.get_inline_color_constraint(table_name, fname)}
-        )
         text["table"] = Helper.FIELD_TEMPLATE.substitute(subst)
         return text, ""
 
@@ -570,16 +555,12 @@ class GenerateCodeBlocks:
                         equal_fields, own_table_field, foreign_table_field, state
                     )
                 )
-            initially_deferred = ModelsHelper.is_fk_initially_deferred(
-                table_name, foreign_table
-            )
             text["alter_table_final"] = (
                 AlterSchemaHelper.get_foreign_key_table_constraint_as_alter_table(
                     table_name,
                     foreign_table,
                     fname,
                     foreign_table_field.ref_column,
-                    initially_deferred,
                 )
             )
             table_name = HelperGetNames.get_table_name(table_name)
@@ -588,8 +569,6 @@ class GenerateCodeBlocks:
                 foreign_table_field.table,
                 fname,
                 foreign_table_field.column,
-                foreign_table_field.ref_column,
-                initially_deferred,
             )
         elif state == FieldSqlErrorType.SQL:
             if sql := fix(fdata.get("sql", "")):
@@ -1104,14 +1083,7 @@ class GenerateCodeBlocks:
             text, error = cls.get_schema_simple_types(
                 table_name, fname, fdata, fdata["type"]
             )
-            initially_deferred = any(
-                ModelsHelper.is_fk_initially_deferred(
-                    table_name, foreign_table_field.table
-                )
-                for foreign_table_field in foreign_table_fields
-            )
             foreign_tables: list[str] = []
-            equal_fields_text = ""
             for foreign_table_field in foreign_table_fields:
                 generic_plain_field_name = HelperGetNames.get_generic_plain_field_name(
                     own_table_field.column,
@@ -1128,7 +1100,9 @@ class GenerateCodeBlocks:
                 if equal_fields := cls.get_equal_fields(
                     own_table_field, foreign_table_field
                 ):
-                    equal_fields_text += cls.get_trigger_definitions_check_equals(
+                    text[
+                        "create_trigger_equal_fields_code"
+                    ] += cls.get_trigger_definitions_check_equals(
                         equal_fields,
                         own_table_field,
                         foreign_table_field,
@@ -1137,7 +1111,7 @@ class GenerateCodeBlocks:
                     )
                 text[
                     "create_trigger_notify"
-                ] += Helper.get_trigger_for_generic_relation(
+                ] += Helper.get_log_trigger_for_generic_relation(
                     table_name,
                     generic_plain_field_name,
                     foreign_table_field.column,
@@ -1150,10 +1124,7 @@ class GenerateCodeBlocks:
                     foreign_table_field.table,
                     generic_plain_field_name,
                     foreign_table_field.ref_column,
-                    initially_deferred,
                 )
-            if equal_fields_text:
-                text["create_trigger_equal_fields_code"] = equal_fields_text
             text["table"] += Helper.get_generic_field_constraint(
                 own_table_field.table, own_table_field.column, foreign_tables
             )
@@ -1234,29 +1205,6 @@ class GenerateCodeBlocks:
 
 
 class ModelsHelper:
-    @staticmethod
-    def is_fk_initially_deferred(own_table: str, foreign_table: str) -> bool:
-        """
-        The "Initially deferred" in fk-definition is necessary,
-        if 2 related tables require both the relation to the other table
-        """
-
-        def _first_to_second(t1: str, t2: str) -> bool:
-            for field in InternalHelper.MODELS[t1].values():
-                if field.get("required") and field["type"].startswith("relation"):
-                    ftable = ModelsHelper.get_foreign_table_from_to_or_reference(
-                        field.get("to"), field.get("reference")
-                    )
-                    if ftable == t2:
-                        return True
-            return False
-
-        return True
-        # TODO: Will be reverted in a future issue
-        # if _first_to_second(own_table, foreign_table):
-        #     return _first_to_second(foreign_table, own_table)
-        # return False
-
     @staticmethod
     def get_foreign_table_from_to_or_reference(
         to: str | None, reference: str | None
